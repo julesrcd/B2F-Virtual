@@ -156,15 +156,21 @@ export default function Home() {
 });
 
   useEffect(() => {
-  const savedUser = localStorage.getItem('user');
+  if (typeof window === "undefined") return;
+
+  const savedUser = localStorage.getItem("user");
 
   if (!savedUser) {
-    router.push('/login');
+    router.push("/login");
     return;
   }
 
-  const userData = JSON.parse(savedUser);
-  setUser(userData);
+  try {
+    const userData = JSON.parse(savedUser);
+    setUser(userData);
+  } catch (e) {
+    router.push("/login");
+  }
 }, [router]);
 
   const [form, setForm] = useState({
@@ -349,11 +355,12 @@ export default function Home() {
     </label>
 
     <div className="text-sm leading-tight">
-      <div className="font-bold">
-  {user?.prenom || "Prenom"}
+  <div className="font-bold">
+    {user?.prenom || "Prenom"}
   </div>
+
   <div className="text-xs opacity-80">
-  {user?.entreprise || "Entreprise"}
+    {user?.entreprise || "Entreprise"}
   </div>
 </div>
   </div>
