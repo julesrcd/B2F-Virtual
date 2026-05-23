@@ -113,7 +113,14 @@ export default function Home() {
 
   const [frets, setFrets] = useState<Fret[]>([]);
 
-  useEffect(() => {
+ useEffect(() => {
+  const savedUser = localStorage.getItem('user');
+
+  if (!savedUser) {
+    router.push("/login");
+    return;
+  }
+
   const stored = localStorage.getItem('frets');
 
   if (stored) {
@@ -121,6 +128,7 @@ export default function Home() {
   } else {
     setFrets([
       {
+        
         id: 1,
         numero: 'B2F001',
         date: '2026-01-01',
@@ -546,8 +554,18 @@ export default function Home() {
             (!filters.metresMax || Number(f.metresDePlancher) <= Number(filters.metresMax))
         )
         .map((f) => (
-          <div key={f.id} className="bg-gray-50 p-4 mb-3 rounded shadow">
+          <div key={f.id} className="bg-gray-50 p-4 mb-3 rounded shadow relative">
             <div className="text-xs text-gray-500">Mise en ligne : {f.date}</div>
+
+{f.creatorId === CURRENT_USER && (
+  <button
+    onClick={() => deleteFret(f.id)}
+    className="absolute top-2 right-2 text-red-600 text-xl hover:scale-110 transition"
+    title="Supprimer ce fret"
+  >
+    🗑️
+  </button>
+)}
 
             <div className="font-bold"> 
               {f.numero} • [{f.paysDepart}] {f.depart} • {f.clientChargement} → [{f.paysArrivee}] {f.arrivee} • {f.clientDechargement}
