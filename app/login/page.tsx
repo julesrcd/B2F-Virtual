@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -20,12 +19,14 @@ export default function LoginPage() {
     if (isRegister) {
       // création compte (simulation localStorage)
       const user = {
-        prenom: form.prenom,
-        entreprise: form.entreprise,
-        email: form.email,
-        password: form.password,
-      };
+  id: Date.now(),
+    createdAt: new Date().toISOString(),
 
+     prenom: form.prenom,
+     entreprise: form.entreprise,
+     email: form.email,
+     password: form.password,
+     };
       localStorage.setItem('user', JSON.stringify(user));
       router.push('/');
     } else {
@@ -42,6 +43,7 @@ export default function LoginPage() {
         user.email === form.email &&
         user.password === form.password
       ) {
+        localStorage.setItem('user', JSON.stringify(user));
         router.push('/');
       } else {
         alert("Identifiants incorrects");

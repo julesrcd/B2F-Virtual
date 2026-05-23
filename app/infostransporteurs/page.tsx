@@ -1,6 +1,25 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
+
+type User = {
+  prenom: string;
+  entreprise: string;
+  email: string;
+};
 
 export default function InfosTransporteurs() {
+  const [user, setUser] = useState<User | null>(null);
+
+useEffect(() => {
+  const savedUser = localStorage.getItem("user");
+
+  if (savedUser) {
+    setUser(JSON.parse(savedUser));
+  }
+}, []);
+
   return (
     <div className="bg-[#CECECE] text-black min-h-screen">
       {/* HEADER */}
@@ -41,10 +60,15 @@ export default function InfosTransporteurs() {
       />
     </label>
 
-    <div className="text-sm leading-tight text-right">
-      <div className="font-bold">Prenom</div>
-      <div className="text-xs opacity-80">Entreprise</div>
+   <div className="text-sm leading-tight text-right">
+  <div className="font-bold">
+  {user?.prenom || "Prenom"}
+   </div>
+
+   <div className="text-xs opacity-80">
+    {user?.entreprise || "Entreprise"}
     </div>
+   </div>
   </div>
 </header>
 

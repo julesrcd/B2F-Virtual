@@ -44,6 +44,12 @@ type Notification = {
   read: boolean;
 };
 
+type User = {
+  prenom: string;
+  entreprise: string;
+  email: string;
+};
+
 const transporteurs = [
   'PJ Logistic',
   'PJ AGRO SERVICE',
@@ -144,8 +150,7 @@ export default function Home() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [openNotif, setOpenNotif] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profilePic, setProfilePic] = useState<string | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [filters, setFilters] = useState({
   transporteur: '',
   typeTransport: '',
@@ -160,14 +165,12 @@ export default function Home() {
 
   const savedUser = localStorage.getItem("user");
 
-  if (!savedUser) {
-    router.push("/login");
-    return;
-  }
+  if (!savedUser) return;
 
   try {
     const userData = JSON.parse(savedUser);
     setUser(userData);
+    console.log("USER CONNECTÉ :", userData);
   } catch (e) {
     router.push("/login");
   }
@@ -301,7 +304,7 @@ export default function Home() {
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
-    <div className="h-screen flex flex-col text-black">
+  <div className="h-screen flex flex-col text-black">
 
       {/* HEADER */}
      <header className="bg-[#0073B5] text-white flex justify-between items-center px-6 h-18">
@@ -591,26 +594,8 @@ export default function Home() {
           </div>
         ))}
     </div>
-
-    {/* DROITE - USERS */}
-    <div className="w-1/4 bg-white rounded shadow p-4 h-fit">
-      <h2 className="text-lg font-bold mb-4">Utilisateurs</h2>
-
-      <div className="mb-3">
-        <h3 className="text-green-600 font-semibold">🟢 Connectés</h3>
-        <div className="text-sm">Jean Dupont</div>
-        <div className="text-sm">Lucas Martin</div>
-      </div>
-
-      <div>
-        <h3 className="text-red-600 font-semibold">🔴 Hors ligne</h3>
-        <div className="text-sm">Paul Bernard</div>
-        <div className="text-sm">Thomas Leroy</div>
-      </div>
-    </div>
-
   </div>
-</div>
+  </div>
 
       {/* MODAL */}
       {openCreate && (
@@ -733,8 +718,9 @@ export default function Home() {
            </div>
            </div>
 
-      )}
-
+            )}
+      
     </div>
+
   );
 }

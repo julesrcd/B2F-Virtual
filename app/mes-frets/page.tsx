@@ -34,12 +34,20 @@ type Fret = {
   creatorId: string;
 };
 
+type User = {
+  prenom: string;
+  entreprise: string;
+  email: string;
+};
+
 export default function MesFretsPage() {
+  const [user, setUser] = useState<User | null>(null);
   const [mesFrets, setMesFrets] = useState<Fret[]>([]);
 
   useEffect(() => {
     // Récupère l'utilisateur connecté
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+    setUser(currentUser);
 
     // Récupère toutes les frets
     const allFrets: Fret[] = JSON.parse(
@@ -120,9 +128,14 @@ function deleteMyFret(id: number) {
     </label>
 
     <div className="text-sm leading-tight text-right">
-      <div className="font-bold">Prenom</div>
-      <div className="text-xs opacity-80">Entreprise</div>
+  <div className="font-bold">
+    {user?.prenom || "Prenom"}
+  </div>
+
+  <div className="text-xs opacity-80">
+    {user?.entreprise || "Entreprise"}
     </div>
+   </div>
   </div>
 </header>
 
