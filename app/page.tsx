@@ -276,51 +276,36 @@ const channel = supabase
   }
 }
 
-  function deleteFret(id: number) {
+  async function deleteFret(id: number) {
     const fret = frets.find((f) => f.id === id);
     if (!fret) return;
 
-    if (fret.creatorId !== CURRENT_USER) {
-      alert("Tu n'es pas le créateur de cette fret");
+    if (fret.creatorId !== user?.prenom) {
+      alert("Tu n'es pas le créateur de ce fret");
       return;
     }
 
-    const ok = window.confirm(`Supprimer la fret ${fret.numero} ?`);
+    const ok = window.confirm(`Supprimer le fret ${fret.numero} ?`);
     if (!ok) return;
 
-    async function deleteFret(id: number) {
-  const fret = frets.find((f) => f.id === id);
-  if (!fret) return;
+    const { error } = await supabase
+      .from('frets')
+      .delete()
+      .eq('id', id);
 
-  if (fret.creatorId !== user?.prenom) {
-    alert("Tu n'es pas le créateur de ce fret");
-    return;
-  }
-
-  const ok = window.confirm(`Supprimer le fret ${fret.numero} ?`);
-  if (!ok) return;
-
-  const { error } = await supabase
-    .from('frets')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error(error);
-    alert("Erreur suppression");
-  }
-}
+    if (error) {
+      console.error(error);
+      alert("Erreur suppression");
+    }
   }
 
   async function createFret() {
-  if (!user) return alert("Vous n'êtes pas connecté.");
-
-  const newFret = {
-    numero: form.numero,
-    date: form.date,
-    transporteur: form.transporteur,
-    depart: form.depart,
-    arrivee: form.arrivee,
+    const newFret = {
+      numero: form.numero,
+      date: form.date,
+      transporteur: form.transporteur,
+      depart: form.depart,
+     arrivee: form.arrivee,
     paysDepart: form.paysDepart,
     paysArrivee: form.paysArrivee,
     clientChargement: form.clientChargement,
@@ -335,7 +320,7 @@ const channel = supabase
     metresDePlancher: form.metresDePlancher,
     reserved: false,
     reservedBy: null,
-    creatorId: user.prenom, // Utilise directement l'état utilisateur connecté
+    creatorId: user?.prenom || 'Anonyme', // Si pas connecté, met 'Anonyme'
   };
 
   const { error } = await supabase
@@ -343,12 +328,12 @@ const channel = supabase
     .insert([newFret]);
 
   if (error) {
-    console.error(error);
-    alert("Erreur création fret");
-    return;
-  }
+  console.error(error);
+  alert(`Erreur Supabase : ${error.message} (Code: ${error.code})`);
+  return; // Bloque la fermeture du modal pour comprendre
+ }
 
-  // On ferme juste le modal, Supabase Realtime va l'afficher sur tous les écrans
+  // On ferme le modal quoi qu'il arrive
   setOpenCreate(false);
 }
 
