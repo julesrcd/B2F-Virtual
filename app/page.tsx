@@ -1,5 +1,6 @@
 'use client';
 
+import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -113,47 +114,81 @@ export default function Home() {
 
   const [frets, setFrets] = useState<Fret[]>([]);
 
- useEffect(() => {
-  const savedUser = localStorage.getItem('user');
-
-  if (!savedUser) {
-    router.push("/login");
-    return;
-  }
-
-  const stored = localStorage.getItem('frets');
-
-  if (stored) {
-    setFrets(JSON.parse(stored));
-  } else {
-    setFrets([
-      {
-        
-        id: 1,
-        numero: 'B2F001',
-        date: '2026-01-01',
-        transporteur: 'PJ Logistic',
-        depart: 'Rennes',
-        arrivee: 'Paris',
-        paysDepart: 'FR',
-        paysArrivee: 'FR',
-        clientChargement: 'Client A',
-        clientDechargement: 'Client B',
-        natureMarchandise: 'Produits frais',
-        typePalette: 'EPAL',
-        typeTravail: 'chrgmt quai',
-        typeTransport: 'Standard',
-        palettes: '33',
-        poids: '24T',
-        priceKm: '1.50',
-        metresDePlancher: '13.4m',
-        reserved: false,
-        reservedBy: null,
-        creatorId: 'PJ Logistic',
-      },
-    ]);
-  }
+  useEffect(() => {
+  console.log(supabase);
 }, []);
+
+useEffect(() => {
+  async function loadFrets() {
+
+    const savedUser = localStorage.getItem('user');
+
+    if (!savedUser) {
+      router.push('/login');
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('frets')
+      .select('*')
+      .order('numero', { ascending: true });
+
+    if (error) {
+      console.error(error);
+      return;
+    }
+
+    setFrets(data || []);
+  }
+
+  // charger les frets au démarrage
+  loadFrets();
+
+  // 🔥 Écouter les changements en direct (dans ton useEffect principal)
+const channel = supabase
+  .channel('frets-channel')
+  .on(
+    'postgres_changes',
+    {
+      event: '*',
+      schema: 'public',
+      table: 'frets',
+    },
+    (payload) => {
+      // Recharge la liste complète pour TOUT LE MONDE en direct
+      loadFrets();
+
+      // Si c'est une réservation sur un de nos frets
+      if (payload.eventType === 'UPDATE') {
+        const newRow = payload.new as any;
+        const savedUser = localStorage.getItem("user");
+        const currentLocalUser = savedUser ? JSON.parse(savedUser) : null;
+
+        if (newRow.reserved && currentLocalUser && newRow.creatorId === currentLocalUser.prenom) {
+          // 🔊 SON
+          const audio = new Audio('/notif-b2f.mp3');
+          audio.play().catch(e => console.log("Audio bloqué", e));
+
+          // 🔔 NOTIFICATION
+          setNotifications((prev) => [
+            {
+              id: Date.now(),
+              read: false,
+              text: `Votre fret ${newRow.numero} ${newRow.depart} → ${newRow.arrivee} a été réservé par ${newRow.reservedBy}`,
+            },
+            ...prev,
+          ]);
+        }
+      }
+    }
+  )
+  .subscribe();
+
+  // cleanup
+  return () => {
+    supabase.removeChannel(channel);
+  };
+}, [router]);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [openNotif, setOpenNotif] = useState(false);
@@ -220,34 +255,25 @@ export default function Home() {
     );
   }
 
-  function reserver(id: number, dateReservation: string) {
-  const fret = frets.find((f) => f.id === id);
-  if (!fret) return;
+  async function reserver(id: number, dateReservation: string) {
 
-  const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-
-  const updatedFrets = frets.map((f) =>
-    f.id === id
-      ? {
-         ...f,
-          reserved: true,
-          reservedBy: currentUser.prenom,
-          dateReservation,
-        }
-      : f
+  const currentUser = JSON.parse(
+    localStorage.getItem('user') || '{}'
   );
 
-  setFrets(updatedFrets);
-  localStorage.setItem('frets', JSON.stringify(updatedFrets));
-  // Notification
-  setNotifications((prev) => [
-    {
-      id: Date.now(),
-      text: `Fret ${fret.numero} réservée`,
-      read: false,
-    },
-    ...prev,
-  ]);
+  const { error } = await supabase
+    .from('frets')
+    .update({
+      reserved: true,
+      reservedBy: currentUser.prenom,
+      dateReservation,
+    })
+    .eq('id', id);
+
+  if (error) {
+    console.error(error);
+    alert("Erreur réservation");
+  }
 }
 
   function deleteFret(id: number) {
@@ -262,52 +288,69 @@ export default function Home() {
     const ok = window.confirm(`Supprimer la fret ${fret.numero} ?`);
     if (!ok) return;
 
-    const updated = frets.filter((f) => f.id !== id);
-    setFrets(updated);
-    localStorage.setItem('frets', JSON.stringify(updated));
+    async function deleteFret(id: number) {
+  const fret = frets.find((f) => f.id === id);
+  if (!fret) return;
+
+  if (fret.creatorId !== user?.prenom) {
+    alert("Tu n'es pas le créateur de ce fret");
+    return;
   }
 
-  function createFret() {
-    const newFret: Fret = {
-      id: Date.now(),
-      numero: form.numero,
-      date: form.date,
+  const ok = window.confirm(`Supprimer le fret ${fret.numero} ?`);
+  if (!ok) return;
 
-      transporteur: form.transporteur,
+  const { error } = await supabase
+    .from('frets')
+    .delete()
+    .eq('id', id);
 
-      depart: form.depart,
-      arrivee: form.arrivee,
-
-      paysDepart: form.paysDepart,
-      paysArrivee: form.paysArrivee,
-
-      clientChargement: form.clientChargement,
-      clientDechargement: form.clientDechargement,
-
-      natureMarchandise: form.natureMarchandise,
-
-      typePalette: form.typePalette,
-      typeTravail: form.typeTravail,
-      typeTransport: form.typeTransport,
-
-      palettes: form.palettes,
-      poids: form.poids,
-      priceKm: form.priceKm,
-      metresDePlancher: form.metresDePlancher,
-
-      reserved: false,
-      reservedBy: null,
-      creatorId: CURRENT_USER,
-    };
-
-    const stored = JSON.parse(localStorage.getItem('frets') || '[]');
-    localStorage.setItem('frets', JSON.stringify([newFret, ...stored]));
-
-    const updated = [newFret, ...frets];
-    setFrets(updated);
-    localStorage.setItem('frets', JSON.stringify(updated));
-    setOpenCreate(false);
+  if (error) {
+    console.error(error);
+    alert("Erreur suppression");
   }
+}
+  }
+
+  async function createFret() {
+  if (!user) return alert("Vous n'êtes pas connecté.");
+
+  const newFret = {
+    numero: form.numero,
+    date: form.date,
+    transporteur: form.transporteur,
+    depart: form.depart,
+    arrivee: form.arrivee,
+    paysDepart: form.paysDepart,
+    paysArrivee: form.paysArrivee,
+    clientChargement: form.clientChargement,
+    clientDechargement: form.clientDechargement,
+    natureMarchandise: form.natureMarchandise,
+    typePalette: form.typePalette,
+    typeTravail: form.typeTravail,
+    typeTransport: form.typeTransport,
+    palettes: form.palettes,
+    poids: form.poids,
+    priceKm: form.priceKm,
+    metresDePlancher: form.metresDePlancher,
+    reserved: false,
+    reservedBy: null,
+    creatorId: user.prenom, // Utilise directement l'état utilisateur connecté
+  };
+
+  const { error } = await supabase
+    .from('frets')
+    .insert([newFret]);
+
+  if (error) {
+    console.error(error);
+    alert("Erreur création fret");
+    return;
+  }
+
+  // On ferme juste le modal, Supabase Realtime va l'afficher sur tous les écrans
+  setOpenCreate(false);
+}
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -557,7 +600,7 @@ export default function Home() {
           <div key={f.id} className="bg-gray-50 p-4 mb-3 rounded shadow relative">
             <div className="text-xs text-gray-500">Mise en ligne : {f.date}</div>
 
-{f.creatorId === CURRENT_USER && (
+{f.creatorId === user?.prenom && (
   <button
     onClick={() => deleteFret(f.id)}
     className="absolute top-2 right-2 text-red-600 text-xl hover:scale-110 transition"
