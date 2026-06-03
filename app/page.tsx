@@ -324,9 +324,16 @@ const channel = supabase
     };
 
     // On envoie à Supabase en arrière-plan
-    await supabase
-      .from('frets')
-      .insert([newFret]);
+    const { data, error } = await supabase
+  .from('frets')
+  .insert([newFret]);
+
+console.log("DATA :", data);
+console.log("ERROR :", error);
+
+if (error) {
+  alert(error.message);
+}
 
     // On ferme la fenêtre quoi qu'il arrive, sans message d'erreur
     setOpenCreate(false);
