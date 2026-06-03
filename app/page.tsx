@@ -305,37 +305,32 @@ const channel = supabase
       date: form.date,
       transporteur: form.transporteur,
       depart: form.depart,
-     arrivee: form.arrivee,
-    paysDepart: form.paysDepart,
-    paysArrivee: form.paysArrivee,
-    clientChargement: form.clientChargement,
-    clientDechargement: form.clientDechargement,
-    natureMarchandise: form.natureMarchandise,
-    typePalette: form.typePalette,
-    typeTravail: form.typeTravail,
-    typeTransport: form.typeTransport,
-    palettes: form.palettes,
-    poids: form.poids,
-    priceKm: form.priceKm,
-    metresDePlancher: form.metresDePlancher,
-    reserved: false,
-    reservedBy: null,
-    creatorId: user?.prenom || 'Anonyme', // Si pas connecté, met 'Anonyme'
-  };
+      arrivee: form.arrivee,
+      paysDepart: form.paysDepart,
+      paysArrivee: form.paysArrivee,
+      clientChargement: form.clientChargement,
+      clientDechargement: form.clientDechargement,
+      natureMarchandise: form.natureMarchandise,
+      typePalette: form.typePalette,
+      typeTravail: form.typeTravail,
+      typeTransport: form.typeTransport,
+      palettes: form.palettes,
+      poids: form.poids,
+      priceKm: form.priceKm,
+      metresDePlancher: form.metresDePlancher,
+      reserved: false,
+      reservedBy: null,
+      creatorId: user?.prenom || 'Anonyme',
+    };
 
-  const { error } = await supabase
-    .from('frets')
-    .insert([newFret]);
+    // On envoie à Supabase en arrière-plan
+    await supabase
+      .from('frets')
+      .insert([newFret]);
 
-  if (error) {
-  console.error(error);
-  alert(`Erreur Supabase : ${error.message} (Code: ${error.code})`);
-  return; // Bloque la fermeture du modal pour comprendre
- }
-
-  // On ferme le modal quoi qu'il arrive
-  setOpenCreate(false);
-}
+    // On ferme la fenêtre quoi qu'il arrive, sans message d'erreur
+    setOpenCreate(false);
+  }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
