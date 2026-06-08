@@ -95,7 +95,7 @@ const typesTravail = [
   'Citerne Pulvé',
   'Citerne ADR',
   'Hayon',
-  'Vis Aliment',
+  'Citerne Aliment Du Bétail',
 ];
 
 const typesTransport = [
