@@ -79,7 +79,7 @@ export default function AgritransPage() {
           {/* IMAGE */}
           <div className="w-1/3">
             <img
-              src="/logos/agritrans_SF.png"
+              src="/logos/Agritrans_SF.png"
               alt="Agritrans"
               className="w-full max-h-[400px] object-contain"
             />
