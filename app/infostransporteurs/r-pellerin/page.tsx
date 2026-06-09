@@ -79,7 +79,7 @@ export default function DuvalFilsPage() {
           {/* IMAGE */}
           <div className="w-1/3">
             <img
-              src="/logos/LOGO_R.PLN_SF.png"
+              src="/logos/LOGO_R.PLN_NOIR_SF.png"
               alt="R.Pellerin"
               className="w-full max-h-[400px] object-contain"
             />
