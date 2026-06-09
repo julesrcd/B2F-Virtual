@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 
 type Fret = {
   id: number;
@@ -45,43 +46,43 @@ export default function MesFretsPage() {
   const [mesFrets, setMesFrets] = useState<Fret[]>([]);
 
   useEffect(() => {
-    // Récupère l'utilisateur connecté
-    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+  async function loadMesFrets() {
+    const currentUser = JSON.parse(
+      localStorage.getItem('user') || '{}'
+    );
+
     setUser(currentUser);
 
-    // Récupère toutes les frets
-    const allFrets: Fret[] = JSON.parse(
-      localStorage.getItem('frets') || '[]'
-    );
+    const { data, error } = await supabase
+      .from('frets')
+      .select('*')
+      .eq('reservedBy', currentUser.prenom);
 
-    // Garde uniquement les frets réservées par cet utilisateur
-    const reservedFrets = allFrets.filter(
-      (f) => f.reservedBy === currentUser.prenom
-    );
+    if (!error) {
+      setMesFrets(data || []);
+    }
+  }
 
-    setMesFrets(reservedFrets);
-  }, []);
+  loadMesFrets();
+}, []);
 
-function deleteMyFret(id: number) {
+async function deleteMyFret(id: number) {
   const ok = window.confirm(
     "Supprimer cette fret ?"
   );
+
   if (!ok) return;
 
-  const allFrets: Fret[] = JSON.parse(
-    localStorage.getItem('frets') || '[]'
-  );
+  const { error } = await supabase
+    .from('frets')
+    .delete()
+    .eq('id', id);
 
-  const updated = allFrets.filter(
-    (f) => f.id !== id
-  );
+  if (error) {
+    alert(error.message);
+    return;
+  }
 
-  localStorage.setItem(
-    'frets',
-    JSON.stringify(updated)
-  );
-
-  // Met à jour la liste affichée
   setMesFrets((prev) =>
     prev.filter((f) => f.id !== id)
   );
