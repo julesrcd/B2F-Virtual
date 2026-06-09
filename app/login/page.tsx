@@ -33,10 +33,9 @@ export default function LoginPage() {
       email: form.email,
       prenom: form.prenom,
       entreprise: form.entreprise,
-      statut: 'en_attente',
     });
 
-    alert("Compte créé, en attente de validation");
+    alert("Compte créé avec succès");
     router.push('/');
   } else {
     const { data, error } = await supabase.auth.signInWithPassword({
