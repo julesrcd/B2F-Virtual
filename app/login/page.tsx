@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,39 +15,39 @@ export default function LoginPage() {
     password: '',
   });
 
-  async function handleSubmit() {
+function handleSubmit() {
   if (isRegister) {
-    const { data, error } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-    });
-
-    if (error) {
-      alert(error.message);
-      return;
-    }
-
-    // optionnel : stocker infos transporteur dans table users
-    await supabase.from('users').insert({
-      email: form.email,
+    const user = {
+      id: Date.now(),
       prenom: form.prenom,
       entreprise: form.entreprise,
-    });
+      email: form.email,
+      password: form.password,
+    };
+
+    localStorage.setItem('user', JSON.stringify(user));
 
     alert("Compte créé avec succès");
     router.push('/');
   } else {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
-    });
+    const saved = localStorage.getItem('user');
 
-    if (error) {
-      alert("Identifiants incorrects");
+    if (!saved) {
+      alert("Compte introuvable");
       return;
     }
 
-    router.push('/');
+    const user = JSON.parse(saved);
+
+    if (
+      user.email === form.email &&
+      user.password === form.password
+    ) {
+      localStorage.setItem('user', JSON.stringify(user));
+      router.push('/');
+    } else {
+      alert("Identifiants incorrects");
+    }
   }
 }
 
