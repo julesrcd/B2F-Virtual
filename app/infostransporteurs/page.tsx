@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 
 type User = {
@@ -13,11 +14,30 @@ export default function InfosTransporteurs() {
   const [user, setUser] = useState<User | null>(null);
 
 useEffect(() => {
-  const savedUser = localStorage.getItem("user");
+  const getUser = async () => {
+    const { data } = await supabase.auth.getUser();
 
-  if (savedUser) {
-    setUser(JSON.parse(savedUser));
-  }
+    if (!data.user) {
+      setUser(null);
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', data.user.id)
+      .single();
+
+    if (profile) {
+      setUser({
+        prenom: profile.prenom,
+        entreprise: profile.entreprise,
+        email: profile.email,
+      });
+    }
+  };
+
+  getUser();
 }, []);
 
   return (

@@ -47,16 +47,24 @@ export default function MesFretsPage() {
 
   useEffect(() => {
   async function loadMesFrets() {
-    const currentUser = JSON.parse(
-      localStorage.getItem('user') || '{}'
-    );
+    const { data: auth } = await supabase.auth.getUser();
 
-    setUser(currentUser);
+    if (!auth.user) return;
 
+    // récupère le profil (prenom)
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('prenom')
+      .eq('id', auth.user.id)
+      .single();
+
+      setUser(profile as User);
+
+    // récupère les frets réservées
     const { data, error } = await supabase
       .from('frets')
       .select('*')
-      .eq('reservedBy', currentUser.prenom);
+      .eq('reservedBy', profile?.prenom);
 
     if (!error) {
       setMesFrets(data || []);
