@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,39 +16,58 @@ export default function LoginPage() {
     password: '',
   });
 
-function handleSubmit() {
+async function handleSubmit() {
+
   if (isRegister) {
-    const user = {
-      id: Date.now(),
-      prenom: form.prenom,
-      entreprise: form.entreprise,
+
+    const { data, error } = await supabase.auth.signUp({
       email: form.email,
       password: form.password,
-    };
+    });
 
-    localStorage.setItem('user', JSON.stringify(user));
-
-    alert("Compte créé avec succès");
-    router.push('/');
-  } else {
-    const saved = localStorage.getItem('user');
-
-    if (!saved) {
-      alert("Compte introuvable");
+    if (error) {
+      alert(error.message);
       return;
     }
 
-    const user = JSON.parse(saved);
 
-    if (
-      user.email === form.email &&
-      user.password === form.password
-    ) {
-      localStorage.setItem('user', JSON.stringify(user));
-      router.push('/');
-    } else {
-      alert("Identifiants incorrects");
+    if (data.user) {
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: data.user.id,
+          email: form.email,
+          prenom: form.prenom,
+          entreprise: form.entreprise,
+        });
+
+
+      if (profileError) {
+        alert(profileError.message);
+        return;
+      }
     }
+
+
+    alert("Compte créé avec succès");
+    router.push('/');
+
+
+  } else {
+
+
+    const { error } = await supabase.auth.signInWithPassword({
+      email: form.email,
+      password: form.password,
+    });
+
+
+    if (error) {
+      alert("Identifiants incorrects");
+      return;
+    }
+
+    router.push('/');
   }
 }
 
