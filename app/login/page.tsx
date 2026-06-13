@@ -50,24 +50,33 @@ async function handleSubmit() {
 
 
     alert("Compte créé avec succès");
+
+    const { data: session } = await supabase.auth.getSession();
+
+    console.log("SESSION CREATION :", session);
+
     router.push('/');
 
 
   } else {
 
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: form.email,
-      password: form.password,
-    });
+    const { data, error } = await supabase.auth.signInWithPassword({
+  email: form.email,
+  password: form.password,
+});
 
 
-    if (error) {
-      alert("Identifiants incorrects");
-      return;
+if (error) {
+  alert(error.message);
+  return;
+}
+
+console.log("SESSION :", data.session);
+
+if (data.session) {
+  router.push('/');
     }
-
-    router.push('/');
   }
 }
 
