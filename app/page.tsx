@@ -121,9 +121,9 @@ export default function Home() {
 useEffect(() => {
   async function loadFrets() {
 
-    const savedUser = localStorage.getItem('user');
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!savedUser) {
+    if (!user) {
       router.push('/login');
       return;
     }
@@ -162,9 +162,9 @@ const channel = supabase
       if (payload.eventType === 'UPDATE') {
         const newRow = payload.new as any;
         const savedUser = localStorage.getItem("user");
-        const currentLocalUser = savedUser ? JSON.parse(savedUser) : null;
+const currentUser = savedUser ? JSON.parse(savedUser) : null;
 
-        if (newRow.reserved && currentLocalUser && newRow.creatorId === currentLocalUser.prenom) {
+        if (newRow.reserved && currentUser && newRow.creatorId === currentUser.id) {
           // 🔊 SON
           const audio = new Audio('/notif-b2f.mp3');
           audio.play().catch(e => console.log("Audio bloqué", e));
@@ -257,9 +257,14 @@ const channel = supabase
 
   async function reserver(id: number, dateReservation: string) {
 
-  const currentUser = JSON.parse(
-    localStorage.getItem('user') || '{}'
-  );
+  const savedUser = localStorage.getItem('user');
+
+  if (!savedUser) {
+    router.push('/login');
+    return;
+  }
+
+  const currentUser = JSON.parse(savedUser) as User;
 
   const { error } = await supabase
     .from('frets')
