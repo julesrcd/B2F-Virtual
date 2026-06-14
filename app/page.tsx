@@ -51,6 +51,19 @@ type User = {
   email: string;
 };
 
+function getLocalUser(): User | null {
+  if (typeof window === "undefined") return null;
+
+  const saved = localStorage.getItem("user");
+  if (!saved) return null;
+
+  try {
+    return JSON.parse(saved);
+  } catch {
+    return null;
+  }
+}
+
 const transporteurs = [
   'PJ Logistic',
   'PJ AGRO SERVICE',
@@ -161,10 +174,9 @@ const channel = supabase
       // Si c'est une réservation sur un de nos frets
       if (payload.eventType === 'UPDATE') {
         const newRow = payload.new as any;
-        const savedUser = localStorage.getItem("user");
-const currentUser = savedUser ? JSON.parse(savedUser) : null;
+        const currentUser = getLocalUser();
 
-        if (newRow.reserved && currentUser && newRow.creatorId === currentUser.id) {
+        if (newRow.reserved && currentUser && newRow.creatorId === currentUser.prenom) {
           // 🔊 SON
           const audio = new Audio('/notif-b2f.mp3');
           audio.play().catch(e => console.log("Audio bloqué", e));
@@ -204,19 +216,16 @@ const currentUser = savedUser ? JSON.parse(savedUser) : null;
 });
 
   useEffect(() => {
-  if (typeof window === "undefined") return;
+  const savedUser = getLocalUser();
 
-  const savedUser = localStorage.getItem("user");
-
-  if (!savedUser) return;
-
-  try {
-    const userData = JSON.parse(savedUser);
-    setUser(userData);
-    console.log("USER CONNECTÉ :", userData);
-  } catch (e) {
+  if (!savedUser) {
     router.push("/login");
+    return;
   }
+
+  setUser(savedUser);
+
+  console.log("USER CONNECTÉ :", savedUser);
 }, [router]);
 
   const [form, setForm] = useState({
