@@ -51,20 +51,22 @@ export default function MesFretsPage() {
 
     if (!auth.user) return;
 
-    // récupère le profil (prenom)
+    // 🔥 récupérer le profil complet
     const { data: profile } = await supabase
       .from('profiles')
-      .select('prenom')
+      .select('prenom, entreprise, email')
       .eq('id', auth.user.id)
       .single();
 
-      setUser(profile as User);
+    if (!profile) return;
 
-    // récupère les frets réservées
+    setUser(profile);
+
+    // 🔥 frets réservés
     const { data, error } = await supabase
       .from('frets')
       .select('*')
-      .eq('reservedBy', profile?.prenom);
+      .eq('reservedBy', profile.prenom);
 
     if (!error) {
       setMesFrets(data || []);

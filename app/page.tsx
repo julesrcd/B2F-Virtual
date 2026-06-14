@@ -266,23 +266,28 @@ const channel = supabase
 
   async function reserver(id: number, dateReservation: string) {
 
-  const savedUser = localStorage.getItem('user');
+  const savedUser = getLocalUser();   
 
   if (!savedUser) {
     router.push('/login');
     return;
   }
 
-  const currentUser = JSON.parse(savedUser) as User;
+  const currentUser = getLocalUser();
+
+if (!currentUser) {
+  router.push('/login');
+  return;
+}
 
   const { error } = await supabase
-    .from('frets')
-    .update({
-      reserved: true,
-      reservedBy: currentUser.prenom,
-      dateReservation,
-    })
-    .eq('id', id);
+  .from('frets')
+  .update({
+    reserved: true,
+    reservedBy: currentUser.prenom,
+    dateReservation,
+  })
+  .eq('id', id);
 
   if (error) {
     console.error(error);
