@@ -29,7 +29,7 @@ async function handleSubmit() {
       alert(error.message);
       return;
     }
-    
+
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')

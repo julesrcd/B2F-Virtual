@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { getUserProfile } from "@/lib/getUserProfile";
 
 type Fret = {
   id: number;
@@ -41,19 +42,7 @@ type User = {
   email: string;
 };
 
-async function getProfile() {
-  const { data: auth } = await supabase.auth.getUser();
 
-  if (!auth.user) return null;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('prenom, entreprise, email')
-    .eq('id', auth.user.id)
-    .single();
-
-  return { auth: auth.user, profile };
-}
 
 export default function MesFretsPage() {
   const [user, setUser] = useState<User | null>(null);

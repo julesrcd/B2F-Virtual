@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
+import { getUserProfile } from "@/lib/getUserProfile";
 
 type User = {
   prenom: string;
@@ -10,19 +11,7 @@ type User = {
   email: string;
 };
 
-async function getProfile() {
-  const { data: auth } = await supabase.auth.getUser();
 
-  if (!auth.user) return null;
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('prenom, entreprise, email')
-    .eq('id', auth.user.id)
-    .single();
-
-  return { auth: auth.user, profile };
-}
 
 export default function InfosTransporteurs() {
   const [user, setUser] = useState<User | null>(null);
@@ -96,7 +85,7 @@ useEffect(() => {
 
    <div className="text-sm leading-tight text-right">
   <div className="font-bold">
-  {user?.prenom || "Prenom"}
+  {user?.prenom || "Prénom"}
    </div>
 
    <div className="text-xs opacity-80">

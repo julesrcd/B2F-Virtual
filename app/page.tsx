@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { getUserProfile } from "@/lib/getUserProfile";
 
 
 type Fret = {
@@ -206,6 +207,23 @@ const channel = supabase
   const [openNotif, setOpenNotif] = useState(false);
   const [openCreate, setOpenCreate] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  
+  useEffect(() => {
+  async function loadProfile() {
+    const profile = await getUserProfile();
+
+    if (!profile) {
+      router.push("/login");
+      return;
+    }
+
+    setUser(profile);
+  }
+
+  loadProfile();
+}, [router]);
+
+
   const [filters, setFilters] = useState({
   transporteur: '',
   typeTransport: '',
@@ -416,7 +434,7 @@ if (error) {
 
     <div className="text-sm leading-tight">
   <div className="font-bold">
-    {user?.prenom || "Prenom"}
+    {user?.prenom || "Prénom"}
   </div>
 
   <div className="text-xs opacity-80">
