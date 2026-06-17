@@ -29,8 +29,7 @@ async function handleSubmit() {
       alert(error.message);
       return;
     }
-
-
+    
     if (data.user) {
       const { error: profileError } = await supabase
         .from('profiles')
@@ -51,11 +50,11 @@ async function handleSubmit() {
 
     alert("Compte créé avec succès");
 
-    const { data: session } = await supabase.auth.getSession();
+const { data: session } = await supabase.auth.getSession();
 
-    console.log("SESSION CREATION :", session);
+console.log("SESSION CREATION :", session);
 
-    router.push('/');
+router.push("/");
 
 
   } else {
