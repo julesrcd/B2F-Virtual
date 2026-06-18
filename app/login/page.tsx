@@ -50,9 +50,7 @@ async function handleSubmit() {
 
     alert("Compte créé avec succès");
 
-const { data: session } = await supabase.auth.getSession();
-
-console.log("SESSION CREATION :", session);
+await new Promise((resolve) => setTimeout(resolve, 500));
 
 router.push("/");
 
@@ -74,8 +72,9 @@ if (error) {
 console.log("SESSION :", data.session);
 
 if (data.session) {
+  await new Promise((resolve) => setTimeout(resolve, 500));
   router.push('/');
-    }
+   }
   }
 }
 
